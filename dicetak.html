@@ -41,6 +41,7 @@
             <h3 class="card-title mt-1"><i class="fas fa-list"></i> Daftar Data</h3>
             <div class="card-tools">
               <button class="btn btn-sm btn-primary" onclick="showAddModal()"><i class="fas fa-plus"></i> Tambah Data</button>
+              <button class="btn btn-sm btn-success" onclick="showImportModal()"><i class="fas fa-file-import"></i> Import CSV</button>
             </div>
           </div>
           <div class="card-body">
@@ -92,6 +93,36 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
           <button type="submit" class="btn btn-success" id="btnSave">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Import CSV -->
+<div class="modal fade" id="modalImport" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">Import Data CSV</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="importForm">
+        <div class="modal-body">
+            <div class="form-group">
+                <label>File CSV</label>
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="csvFile" accept=".csv" required>
+                    <label class="custom-file-label" for="csvFile">Pilih file...</label>
+                </div>
+                <small class="form-text text-muted">Pastikan format CSV sesuai standar: TGL(DD-MM-YYYY), NO, NAMA.</small>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-success" id="btnImport"><i class="fas fa-upload"></i> Upload & Import</button>
         </div>
       </form>
     </div>
@@ -191,9 +222,89 @@
             .catch(err => Swal.fire('Error', err.toString(), 'error'))
             .finally(() => $('#btnSave').prop('disabled', false).html('Simpan'));
         });
+
+        $('#csvFile').on('change', function() {
+            let fileName = $(this).val().split('\\\\').pop();
+            $(this).next('.custom-file-label').addClass("selected").html(fileName);
+        });
+
+        $('#importForm').on('submit', function(e) {
+            e.preventDefault();
+            var file = document.getElementById('csvFile').files[0];
+            if(!file) return;
+
+            $('#btnImport').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
+            
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var text = e.target.result;
+                var lines = text.split(/\r?\n/);
+                var rows = [];
+                
+                var separator = ',';
+                if (lines.length > 0 && lines[0].indexOf(';') >= 0) {
+                    separator = ';';
+                }
+                
+                for(var i=0; i<lines.length; i++) {
+                    if(lines[i].trim() === '') continue;
+                    var cols = lines[i].split(separator).map(c => c.trim().replace(/^"|"$/g, ''));
+                    
+                    if (i === 0 && cols[0].toUpperCase().includes('TGL')) continue; // Skip header
+                    
+                    if(cols.length >= 3) {
+                        let dateStr = cols[0];
+                        let dateParts = dateStr.split(/[-/]/);
+                        if (dateParts.length === 3 && dateParts[0].length <= 2) {
+                            dateStr = dateParts[2] + '-' + dateParts[1].padStart(2, '0') + '-' + dateParts[0].padStart(2, '0');
+                        }
+                        rows.push({
+                            tgl_permohonan: dateStr,
+                            no_permohonan: cols[1] || '',
+                            nama: cols[2] || ''
+                        });
+                    }
+                }
+                
+                if(rows.length === 0) {
+                    Swal.fire('Gagal!', 'Tidak ada data valid di file CSV', 'error');
+                    $('#btnImport').prop('disabled', false).html('<i class="fas fa-upload"></i> Upload & Import');
+                    return;
+                }
+                
+                fetch(CONFIG.API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'import',
+                        table: 'dicetak',
+                        rows: rows
+                    })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if(res.status === 'success') {
+                        $('#modalImport').modal('hide');
+                        table.ajax.reload(null, false);
+                        Swal.fire('Sukses!', res.count + ' data berhasil diimport!', 'success');
+                    } else {
+                        Swal.fire('Gagal!', res.message, 'error');
+                    }
+                })
+                .catch(err => Swal.fire('Error', err.toString(), 'error'))
+                .finally(() => $('#btnImport').prop('disabled', false).html('<i class="fas fa-upload"></i> Upload & Import'));
+            };
+            reader.readAsText(file);
+        });
     });
 
-    function showAddModal() {
+    window.showImportModal = function() {
+        $('#importForm')[0].reset();
+        $('.custom-file-label').html('Pilih file...');
+        $('#modalImport').modal('show');
+    }
+
+    window.showAddModal = function() {
         $('#dataForm')[0].reset();
         $('#id').val('');
         $('#action').val('insert');
@@ -201,7 +312,7 @@
         $('#modalForm').modal('show');
     }
 
-    function editData(encodedData) {
+    window.editData = function(encodedData) {
         var data = JSON.parse(decodeURIComponent(encodedData));
         $('#id').val(data.id);
         $('#tgl_permohonan').val(data.tgl_permohonan);
@@ -212,7 +323,7 @@
         $('#modalForm').modal('show');
     }
 
-    function deleteData(id) {
+    window.deleteData = function(id) {
         Swal.fire({
             title: 'Apakah Anda yakin?',
             text: "Data yang dihapus tidak dapat dikembalikan!",

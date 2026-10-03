@@ -198,8 +198,12 @@
             "processing": true,
             "serverSide": false, // Karena pakai GAS, data diambil semua sekaligus
             "createdRow": function(row, data, dataIndex) {
+                var cetak = (data.status_cetak || "").toUpperCase();
                 var ket = (data.keterangan || "").toUpperCase();
-                if (ket.includes('DITOLAK') || ket.includes('DUPLIKASI')) {
+                
+                if (cetak === 'SUDAH DICETAK') {
+                    $(row).addClass('table-success');
+                } else if (ket.includes('DITOLAK') || ket.includes('DUPLIKASI')) {
                     $(row).addClass('table-danger');
                 } else if (ket.includes('LD')) {
                     $(row).addClass('table-warning');

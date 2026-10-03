@@ -235,6 +235,18 @@
         table = $('#dataTable').DataTable({
             "processing": true,
             "serverSide": false,
+            "createdRow": function(row, data, dataIndex) {
+                var cetak = (data.status_cetak || "").toUpperCase();
+                var ket = (data.keterangan || "").toUpperCase();
+                
+                if (cetak === 'SUDAH DICETAK') {
+                    $(row).addClass('table-success');
+                } else if (ket.includes('DITOLAK') || ket.includes('DUPLIKASI')) {
+                    $(row).addClass('table-danger');
+                } else if (ket.includes('LD')) {
+                    $(row).addClass('table-warning');
+                }
+            },
             "ajax": {
                 "url": CONFIG.API_URL + "?table=pembanding",
                 "type": "GET",

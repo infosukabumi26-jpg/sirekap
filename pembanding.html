@@ -281,10 +281,10 @@
                     "orderable": false,
                     "render": function(data, type, row) {
                         var rowData = encodeURIComponent(JSON.stringify(row));
-                        return \`
-                            <button class="btn btn-xs btn-warning" onclick="editData('\${rowData}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-xs btn-danger" onclick="deleteData('\${data}')"><i class="fas fa-trash"></i></button>
-                        \`;
+                        return `
+                            <button class="btn btn-xs btn-warning" onclick="editData('${rowData}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-xs btn-danger" onclick="deleteData('${data}')"><i class="fas fa-trash"></i></button>
+                        `;
                     }
                 }
             ]

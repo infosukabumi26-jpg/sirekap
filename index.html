@@ -246,10 +246,10 @@
                     "render": function(data, type, row) {
                         // Simpan row data di atribut data-row untuk diedit
                         var rowData = encodeURIComponent(JSON.stringify(row));
-                        return \`
-                            <button class="btn btn-xs btn-warning mb-1" onclick="editData('\${rowData}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-xs btn-danger mb-1" onclick="deleteData('\${data}')"><i class="fas fa-trash"></i></button>
-                        \`;
+                        return `
+                            <button class="btn btn-xs btn-warning mb-1" onclick="editData('${rowData}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-xs btn-danger mb-1" onclick="deleteData('${data}')"><i class="fas fa-trash"></i></button>
+                        `;
                     }
                 }
             ]

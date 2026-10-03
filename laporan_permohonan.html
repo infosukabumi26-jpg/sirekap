@@ -250,7 +250,7 @@
             let date = d.getDate().toString().padStart(2, '0');
             let month = (d.getMonth() + 1).toString().padStart(2, '0');
             let year = d.getFullYear();
-            return \`\${date}/\${month}/\${year}\`;
+            return `${date}/${month}/${year}`;
         } catch(e) {
             return dateStr;
         }

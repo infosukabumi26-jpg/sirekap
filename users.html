@@ -135,10 +135,10 @@
                     "className": "text-center", 
                     "orderable": false,
                     "render": function(data, type, row) {
-                        return \`
-                            <button class="btn btn-xs btn-warning btn-edit" data-id="\${data}" data-username="\${row.username}" data-role="\${row.role}"><i class="fas fa-edit"></i> Edit</button>
-                            <button class="btn btn-xs btn-danger btn-delete" data-id="\${data}"><i class="fas fa-trash"></i> Hapus</button>
-                        \`;
+                        return `
+                            <button class="btn btn-xs btn-warning btn-edit" data-id="${data}" data-username="${row.username}" data-role="${row.role}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-xs btn-danger btn-delete" data-id="${data}"><i class="fas fa-trash"></i> Hapus</button>
+                        `;
                     }
                 }
             ]

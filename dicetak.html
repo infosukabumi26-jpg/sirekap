@@ -168,8 +168,14 @@
                     "data": "tgl_permohonan",
                     "render": function(data) {
                         if (!data) return '';
+                        if (data.indexOf('T') !== -1) {
+                            var d = new Date(data);
+                            if (!isNaN(d.getTime())) {
+                                return ("0" + d.getDate()).slice(-2) + '/' + ("0" + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear();
+                            }
+                        }
                         var parts = data.split('-');
-                        if (parts.length === 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
+                        if (parts.length === 3) return parts[2].substring(0,2) + '/' + parts[1] + '/' + parts[0];
                         return data;
                     }
                 },
@@ -323,7 +329,14 @@
     window.editData = function(encodedData) {
         var data = JSON.parse(decodeURIComponent(encodedData));
         $('#id').val(data.id);
-        $('#tgl_permohonan').val(data.tgl_permohonan);
+                var tgl = data.tgl_permohonan || '';
+        if (tgl.indexOf('T') !== -1) {
+            var d = new Date(tgl);
+            if (!isNaN(d.getTime())) {
+                tgl = d.getFullYear() + '-' + ("0" + (d.getMonth() + 1)).slice(-2) + '-' + ("0" + d.getDate()).slice(-2);
+            }
+        }
+        $('#tgl_permohonan').val(tgl);
         $('#no_permohonan').val(data.no_permohonan);
         $('#nama').val(data.nama);
         $('#action').val('update');
@@ -368,5 +381,6 @@
 </script>
 </body>
 </html>
+
 
 

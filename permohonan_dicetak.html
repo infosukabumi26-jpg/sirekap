@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIREKAP Cloud | Permohonan (Dicetak)</title>
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
+  <!-- SweetAlert2 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
+  <script src="config.js"></script>
+  <script>
+      if(localStorage.getItem('sirekap_role') !== 'administrator') {
+          alert('Akses Ditolak! Hanya Administrator yang boleh mengakses halaman ini.');
+          window.location.href = 'index.html';
+      }
+  </script>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+  <!-- Navbar & Sidebar injected by layout.js -->
+
+  <!-- Content Wrapper -->
+  <div class="content-wrapper">
+    <div class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1 class="m-0">Data Permohonan (Sinkronisasi Cetak)</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="card card-info card-outline shadow-sm">
+          <div class="card-header bg-white">
+            <div class="row align-items-center">
+              <div class="col-md-3">
+                <h3 class="card-title mt-1"><i class="fas fa-list"></i> Filter Data</h3>
+              </div>
+              <div class="col-md-9 text-right">
+                <form id="filterForm" class="form-inline justify-content-end">
+                  <div class="input-group input-group-sm mr-2">
+                    <div class="input-group-prepend"><span class="input-group-text">Dari</span></div>
+                    <input type="date" class="form-control" id="tgl_awal">
+                  </div>
+                  <div class="input-group input-group-sm mr-2">
+                    <div class="input-group-prepend"><span class="input-group-text">Sampai</span></div>
+                    <input type="date" class="form-control" id="tgl_akhir">
+                  </div>
+                  <button type="submit" class="btn btn-sm btn-primary mr-2"><i class="fas fa-filter"></i> Terapkan</button>
+                  <button type="button" class="btn btn-sm btn-secondary mr-2" id="btnReset"><i class="fas fa-sync-alt"></i> Reset</button>
+                  <button type="button" class="btn btn-sm btn-success" id="btnExcel"><i class="fas fa-file-excel"></i> Export CSV</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="loading" class="text-center p-3" style="display:none;"><i class="fas fa-spinner fa-spin fa-2x"></i> Memuat data...</div>
+            <table id="dataTable" class="table table-bordered table-hover w-100" style="display:none;">
+              <thead style="background-color: #3bc2e9; color: black;">
+              <tr>
+                <th>NO</th>
+                <th>TGL. PERMOHONAN</th>
+                <th>NO. PERMOHONAN</th>
+                <th>NAMA</th>
+                <th>L/P</th>
+                <th>TP</th>
+                <th>TL</th>
+                <th>KETERANGAN</th>
+                <th>STATUS CETAK</th>
+              </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+<!-- DataTables & Plugins -->
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+<script src="layout.js"></script>
+
+<script>
+    var table;
+    var allData = [];
+
+    async function loadData() {
+        $('#loading').show();
+        $('#dataTable').hide();
+        if(table) { table.destroy(); }
+
+        try {
+            const [permRes, dicetakRes] = await Promise.all([
+                fetch(CONFIG.API_URL + "?table=permohonan").then(r=>r.json()),
+                fetch(CONFIG.API_URL + "?table=dicetak").then(r=>r.json())
+            ]);
+
+            let permohonan = permRes.data || [];
+            let dicetak = dicetakRes.data || [];
+
+            let dicetakMap = new Set();
+            dicetak.forEach(d => dicetakMap.add(d.no_permohonan + '|' + d.nama));
+
+            allData = permohonan.map((p, index) => {
+                p.no = index + 1;
+                let isDicetak = dicetakMap.has(p.no_permohonan + '|' + p.nama);
+                p.is_dicetak = isDicetak;
+                p.status_cetak = isDicetak ? '<span class="badge badge-success"><i class="fas fa-check-double"></i> SUDAH DICETAK</span>' : '<span class="badge badge-secondary"><i class="fas fa-hourglass-half"></i> BELUM DICETAK</span>';
+                return p;
+            });
+
+            renderTable(allData);
+        } catch (e) {
+            Swal.fire('Error', 'Gagal memuat data.', 'error');
+        } finally {
+            $('#loading').hide();
+            $('#dataTable').show();
+        }
+    }
+
+    function renderTable(dataToRender) {
+        if(table) {
+            table.destroy();
+        }
+        table = $('#dataTable').DataTable({
+            "data": dataToRender,
+            "responsive": true,
+            "language": { "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/id.json" },
+            "createdRow": function( row, data, dataIndex ) {
+                if(data.is_dicetak) {
+                    $(row).css('background-color', '#d4edda');
+                } else if(data.keterangan && (data.keterangan.toUpperCase() == 'DUPLIKASI' || data.keterangan.toUpperCase() == 'DITOLAK')) {
+                    $(row).css('background-color', '#f8d7da');
+                }
+            },
+            "columns": [
+                { "data": "no", "orderable": false },
+                { "data": "tgl_permohonan" },
+                { "data": "no_permohonan" },
+                { "data": "nama" },
+                { "data": "jenis_kelamin", "className": "text-center" },
+                { "data": "tp", "className": "text-center", "render": function(d){ return d == 1 ? 'TP' : ''; } },
+                { "data": "tl", "className": "text-center", "render": function(d){ return d == 1 ? 'TL' : ''; } },
+                { "data": "keterangan" },
+                { "data": "status_cetak", "className": "text-center", "orderable": false }
+            ],
+            "order": [[1, 'desc']]
+        });
+    }
+
+    $(document).ready(function() {
+        loadData();
+
+        $('#filterForm').on('submit', function(e) {
+            e.preventDefault();
+            let awal = $('#tgl_awal').val();
+            let akhir = $('#tgl_akhir').val();
+            let filtered = allData;
+            if(awal) { filtered = filtered.filter(d => d.tgl_permohonan >= awal); }
+            if(akhir) { filtered = filtered.filter(d => d.tgl_permohonan <= akhir); }
+            renderTable(filtered);
+        });
+
+        $('#btnReset').on('click', function() {
+            $('#tgl_awal').val('');
+            $('#tgl_akhir').val('');
+            renderTable(allData);
+        });
+
+        $('#btnExcel').on('click', function() {
+            let csvContent = "data:text/csv;charset=utf-8,NO,TGL PERMOHONAN,NO PERMOHONAN,NAMA,L/P,TP,TL,KETERANGAN,STATUS CETAK\n";
+            let awal = $('#tgl_awal').val();
+            let akhir = $('#tgl_akhir').val();
+            let filtered = allData;
+            if(awal) { filtered = filtered.filter(d => d.tgl_permohonan >= awal); }
+            if(akhir) { filtered = filtered.filter(d => d.tgl_permohonan <= akhir); }
+            
+            filtered.forEach(function(row) {
+                let status = row.is_dicetak ? 'SUDAH DICETAK' : 'BELUM DICETAK';
+                let rowArray = [
+                    row.no, row.tgl_permohonan, row.no_permohonan, row.nama, row.jenis_kelamin, 
+                    row.tp == 1 ? 'TP' : '', row.tl == 1 ? 'TL' : '', row.keterangan || '', status
+                ];
+                csvContent += rowArray.join(",") + "\n";
+            });
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "permohonan_dicetak.csv");
+            document.body.appendChild(link);
+            link.click();
+        });
+    });
+</script>
+</body>
+</html>

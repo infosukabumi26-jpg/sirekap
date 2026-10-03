@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIREKAP Cloud | Data Pembanding</title>
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
+  <!-- iCheck for checkboxes -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/icheck-bootstrap/3.0.1/icheck-bootstrap.min.css">
+  <!-- Theme style AdminLTE -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+  <!-- SweetAlert2 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+  <script src="config.js"></script>
+  <style>
+    .table th, .table td {
+        vertical-align: middle !important;
+    }
+  </style>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+  <!-- Navbar & Sidebar injected by layout.js -->
+
+  <!-- Content Wrapper -->
+  <div class="content-wrapper">
+    <div class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1 class="m-0 text-dark">Data Pembanding</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="card card-info card-outline shadow-sm">
+          <div class="card-header d-flex align-items-center">
+            <h3 class="card-title m-0 font-weight-bold">Daftar Rekapitulasi Pembanding</h3>
+            <div class="card-tools ml-auto">
+              <button type="button" class="btn btn-info btn-sm" onclick="showAddModal()">
+                <i class="fas fa-plus"></i> Tambah Data
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table id="dataTable" class="table table-bordered table-hover w-100 dt-responsive nowrap">
+              <thead class="bg-light">
+              <tr>
+                <th width="5%">No</th>
+                <th>Tgl. Permohonan</th>
+                <th>No. Permohonan</th>
+                <th>Nama</th>
+                <th>L/P</th>
+                <th class="text-center">TP</th>
+                <th class="text-center">TL</th>
+                <th>Keterangan</th>
+                <th class="text-center">Status</th>
+                <th width="10%" class="text-center">Aksi</th>
+              </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+  <footer class="main-footer text-sm">
+    <strong>Copyright &copy; 2026 <a href="#">SIREKAP Cloud</a>.</strong> All rights reserved.
+  </footer>
+</div>
+
+<!-- Modal Form -->
+<div class="modal fade" id="modal-form" data-backdrop="static">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form id="dataForm">
+        <div class="modal-header bg-info">
+          <h4 class="modal-title font-weight-bold text-white" id="modalTitle">Tambah Data Pembanding</h4>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" name="id" id="id">
+            <input type="hidden" name="action" id="action" value="insert">
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Tgl. Permohonan <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="tgl_permohonan" id="tgl_permohonan" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>No. Permohonan <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="no_permohonan" id="no_permohonan" placeholder="Masukkan No Permohonan" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Nama Pemohon <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="nama" id="nama" placeholder="Masukkan Nama Lengkap" required>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Jenis Kelamin <span class="text-danger">*</span></label>
+                        <select class="form-control" name="jenis_kelamin" id="jenis_kelamin" required>
+                            <option value="">-- Pilih --</option>
+                            <option value="L">Laki-laki (L)</option>
+                            <option value="P">Perempuan (P)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="d-block mb-3">Tanda Pengenal (TP)</label>
+                        <div class="icheck-info d-inline">
+                            <input type="checkbox" id="tp" name="tp" value="1">
+                            <label for="tp">Dilampirkan</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="d-block mb-3">Tanda Lainnya (TL)</label>
+                        <div class="icheck-info d-inline">
+                            <input type="checkbox" id="tl" name="tl" value="1">
+                            <label for="tl">Dilampirkan</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Keterangan</label>
+                <select class="form-control" name="keterangan_pilih" id="keterangan_pilih" onchange="toggleKeteranganManual(this.value)">
+                    <option value="">-- Kosong --</option>
+                    <option value="DUPLIKASI">DUPLIKASI</option>
+                    <option value="DITOLAK">DITOLAK</option>
+                    <option value="PATAH">PATAH</option>
+                    <option value="ISI MANUAL">ISI MANUAL...</option>
+                </select>
+                <input type="text" class="form-control mt-2" name="keterangan" id="keterangan" placeholder="Ketik keterangan manual disini..." style="display:none;">
+            </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Batal</button>
+          <button type="submit" class="btn btn-info" id="btnSave"><i class="fas fa-save"></i> Simpan Data</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.1/js/bootstrap.bundle.min.js"></script>
+<!-- DataTables & Plugins -->
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js"></script>
+<!-- AdminLTE App -->
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script src="layout.js"></script>
+
+<script>
+    function toggleKeteranganManual(val) {
+        if(val === 'ISI MANUAL') {
+            $('#keterangan').show().val('').attr('required', true);
+        } else {
+            $('#keterangan').hide().val(val).removeAttr('required');
+        }
+    }
+
+    var table;
+    $(document).ready(function() {
+        table = $('#dataTable').DataTable({
+            "processing": true,
+            "serverSide": false,
+            "ajax": {
+                "url": CONFIG.API_URL + "?table=pembanding",
+                "type": "GET",
+                "dataSrc": function (json) {
+                    if (json.status !== 'success') {
+                        Swal.fire('Error', json.message || 'Gagal memuat data', 'error');
+                        return [];
+                    }
+                    for (var i = 0; i < json.data.length; i++) {
+                        json.data[i].no = i + 1;
+                    }
+                    return json.data;
+                }
+            },
+            "responsive": true,
+            "autoWidth": false,
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/id.json"
+            },
+            "columns": [
+                { "data": "no", "orderable": false },
+                { "data": "tgl_permohonan" },
+                { "data": "no_permohonan" },
+                { "data": "nama" },
+                { "data": "jenis_kelamin" },
+                { 
+                    "data": "tp", 
+                    "className": "text-center", 
+                    "render": function(data) {
+                        return data == 1 ? '<span class="badge badge-success"><i class="fas fa-check"></i></span>' : '-';
+                    }
+                },
+                { 
+                    "data": "tl", 
+                    "className": "text-center", 
+                    "render": function(data) {
+                        return data == 1 ? '<span class="badge badge-success"><i class="fas fa-check"></i></span>' : '-';
+                    }
+                },
+                { "data": "keterangan" },
+                { "data": "status", "className": "text-center" },
+                { 
+                    "data": "id",
+                    "className": "text-center", 
+                    "orderable": false,
+                    "render": function(data, type, row) {
+                        var rowData = encodeURIComponent(JSON.stringify(row));
+                        return \`
+                            <button class="btn btn-xs btn-warning" onclick="editData('\${rowData}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-xs btn-danger" onclick="deleteData('\${data}')"><i class="fas fa-trash"></i></button>
+                        \`;
+                    }
+                }
+            ]
+        });
+
+        $('#dataForm').on('submit', function(e) {
+            e.preventDefault();
+            $('#btnSave').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+
+            var action = $('#action').val();
+            var reqData = {
+                tgl_permohonan: $('#tgl_permohonan').val(),
+                no_permohonan: $('#no_permohonan').val(),
+                nama: $('#nama').val(),
+                jenis_kelamin: $('#jenis_kelamin').val(),
+                tp: $('#tp').is(':checked') ? 1 : 0,
+                tl: $('#tl').is(':checked') ? 1 : 0,
+                keterangan: $('#keterangan').val()
+            };
+
+            var payload = {
+                action: action,
+                table: 'pembanding',
+                data: reqData
+            };
+
+            if(action === 'update') {
+                payload.id = $('#id').val();
+            }
+
+            fetch(CONFIG.API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(res => {
+                if(res.status === 'success') {
+                    $('#modal-form').modal('hide');
+                    table.ajax.reload(null, false);
+                    Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 2000, showConfirmButton: false });
+                } else {
+                    Swal.fire('Gagal!', res.message, 'error');
+                }
+            })
+            .catch(err => Swal.fire('Error', err.toString(), 'error'))
+            .finally(() => $('#btnSave').prop('disabled', false).html('<i class="fas fa-save"></i> Simpan Data'));
+        });
+    });
+
+    function showAddModal() {
+        $('#dataForm')[0].reset();
+        $('#action').val('insert');
+        $('#modalTitle').text('Tambah Data Pembanding');
+        $('#tp').prop('checked', false);
+        $('#tl').prop('checked', false);
+        $('#keterangan_pilih').val('');
+        $('#keterangan').hide().val('');
+        $('#modal-form').modal('show');
+    }
+
+    function editData(encodedData) {
+        var data = JSON.parse(decodeURIComponent(encodedData));
+        $('#id').val(data.id);
+        $('#tgl_permohonan').val(data.tgl_permohonan);
+        $('#no_permohonan').val(data.no_permohonan);
+        $('#nama').val(data.nama);
+        $('#jenis_kelamin').val(data.jenis_kelamin);
+        $('#tp').prop('checked', data.tp == 1);
+        $('#tl').prop('checked', data.tl == 1);
+        
+        var ket = data.keterangan || '';
+        if(ket == 'DUPLIKASI' || ket == 'DITOLAK' || ket == 'PATAH' || ket == '') {
+            $('#keterangan_pilih').val(ket);
+            $('#keterangan').hide().val(ket);
+        } else {
+            $('#keterangan_pilih').val('ISI MANUAL');
+            $('#keterangan').show().val(ket);
+        }
+        
+        $('#action').val('update');
+        $('#modalTitle').text('Edit Data Pembanding');
+        $('#modal-form').modal('show');
+    }
+
+    function deleteData(id) {
+        Swal.fire({
+            title: 'Apakah anda yakin?', text: "Data yang dihapus tidak dapat dikembalikan!", icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Ya, hapus!', cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var payload = {
+                    action: 'delete',
+                    table: 'pembanding',
+                    id: id
+                };
+
+                fetch(CONFIG.API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if(res.status === 'success') {
+                        table.ajax.reload(null, false);
+                        Swal.fire({ icon: 'success', title: 'Terhapus!', timer: 2000, showConfirmButton: false });
+                    } else { Swal.fire('Gagal!', res.message, 'error'); }
+                });
+            }
+        });
+    }
+</script>
+</body>
+</html>

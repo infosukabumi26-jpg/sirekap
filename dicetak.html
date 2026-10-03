@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIREKAP Cloud | Data Dicetak</title>
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap4.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
+  <script src="config.js"></script>
+  <script>
+      if(localStorage.getItem('sirekap_role') !== 'administrator') {
+          alert('Akses Ditolak! Hanya Administrator yang boleh mengakses halaman ini.');
+          window.location.href = 'index.html';
+      }
+  </script>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+  <!-- Navbar & Sidebar injected by layout.js -->
+
+  <div class="content-wrapper">
+    <div class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1 class="m-0">Data Yang Sudah Dicetak</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="content">
+      <div class="container-fluid">
+        <div class="card card-success card-outline shadow-sm">
+          <div class="card-header">
+            <h3 class="card-title mt-1"><i class="fas fa-list"></i> Daftar Data</h3>
+            <div class="card-tools">
+              <button class="btn btn-sm btn-primary" onclick="showAddModal()"><i class="fas fa-plus"></i> Tambah Data</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <table id="dataTable" class="table table-bordered table-striped table-hover w-100">
+              <thead class="bg-light">
+              <tr>
+                <th>NO</th>
+                <th>TGL. PERMOHONAN</th>
+                <th>NO. PERMOHONAN</th>
+                <th>NAMA</th>
+                <th>AKSI</th>
+              </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="modal fade" id="modalForm" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="modalTitle">Tambah Data</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="dataForm">
+        <div class="modal-body">
+            <input type="hidden" id="id" name="id">
+            <input type="hidden" id="action" name="action" value="insert">
+            <div class="form-group">
+                <label>Tgl. Permohonan</label>
+                <input type="date" class="form-control" id="tgl_permohonan" name="tgl_permohonan" required>
+            </div>
+            <div class="form-group">
+                <label>No. Permohonan</label>
+                <input type="text" class="form-control" id="no_permohonan" name="no_permohonan" required>
+            </div>
+            <div class="form-group">
+                <label>Nama</label>
+                <input type="text" class="form-control" id="nama" name="nama" required>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-success" id="btnSave">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+<script src="layout.js"></script>
+
+<script>
+    var table;
+    $(document).ready(function() {
+        table = $('#dataTable').DataTable({
+            "processing": true,
+            "serverSide": false,
+            "ajax": {
+                "url": CONFIG.API_URL + "?table=dicetak",
+                "type": "GET",
+                "dataSrc": function (json) {
+                    if (json.status !== 'success') {
+                        Swal.fire('Error', json.message || 'Gagal memuat data', 'error');
+                        return [];
+                    }
+                    for (var i = 0; i < json.data.length; i++) {
+                        json.data[i].no = i + 1;
+                    }
+                    // Sort descending by tgl_permohonan manually if needed, or let DataTables handle it
+                    return json.data;
+                }
+            },
+            "responsive": true,
+            "language": { "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/id.json" },
+            "columns": [
+                { "data": "no", "orderable": false },
+                { "data": "tgl_permohonan" },
+                { "data": "no_permohonan" },
+                { "data": "nama" },
+                { 
+                    "data": "id",
+                    "className": "text-center", 
+                    "orderable": false,
+                    "render": function(data, type, row) {
+                        var rowData = encodeURIComponent(JSON.stringify(row));
+                        return \`
+                            <button class="btn btn-xs btn-warning" onclick="editData('\${rowData}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-xs btn-danger" onclick="deleteData('\${data}')"><i class="fas fa-trash"></i></button>
+                        \`;
+                    }
+                }
+            ],
+            "order": [[1, 'desc']]
+        });
+
+        $('#dataForm').on('submit', function(e) {
+            e.preventDefault();
+            $('#btnSave').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+
+            var action = $('#action').val();
+            var reqData = {
+                tgl_permohonan: $('#tgl_permohonan').val(),
+                no_permohonan: $('#no_permohonan').val(),
+                nama: $('#nama').val()
+            };
+
+            var payload = {
+                action: action,
+                table: 'dicetak',
+                data: reqData
+            };
+
+            if(action === 'update') {
+                payload.id = $('#id').val();
+            }
+
+            fetch(CONFIG.API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(res => {
+                if(res.status === 'success') {
+                    $('#modalForm').modal('hide');
+                    Swal.fire('Sukses!', 'Berhasil disimpan', 'success');
+                    table.ajax.reload(null, false);
+                } else {
+                    Swal.fire('Gagal!', res.message, 'error');
+                }
+            })
+            .catch(err => Swal.fire('Error', err.toString(), 'error'))
+            .finally(() => $('#btnSave').prop('disabled', false).html('Simpan'));
+        });
+    });
+
+    function showAddModal() {
+        $('#dataForm')[0].reset();
+        $('#id').val('');
+        $('#action').val('insert');
+        $('#modalTitle').text('Tambah Data');
+        $('#modalForm').modal('show');
+    }
+
+    function editData(encodedData) {
+        var data = JSON.parse(decodeURIComponent(encodedData));
+        $('#id').val(data.id);
+        $('#tgl_permohonan').val(data.tgl_permohonan);
+        $('#no_permohonan').val(data.no_permohonan);
+        $('#nama').val(data.nama);
+        $('#action').val('update');
+        $('#modalTitle').text('Edit Data');
+        $('#modalForm').modal('show');
+    }
+
+    function deleteData(id) {
+        Swal.fire({
+            title: 'Apakah Anda yakin?',
+            text: "Data yang dihapus tidak dapat dikembalikan!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Hapus!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var payload = {
+                    action: 'delete',
+                    table: 'dicetak',
+                    id: id
+                };
+
+                fetch(CONFIG.API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if(res.status === 'success') {
+                        Swal.fire('Terhapus!', 'Berhasil dihapus', 'success');
+                        table.ajax.reload(null, false);
+                    } else {
+                        Swal.fire('Gagal!', res.message, 'error');
+                    }
+                });
+            }
+        });
+    }
+</script>
+</body>
+</html>

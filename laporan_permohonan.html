@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIREKAP Cloud | Laporan Permohonan</title>
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
+  <script src="config.js"></script>
+  <style>
+      .table th, .table td { vertical-align: middle !important; border-color: #000 !important; }
+      @media print {
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .wrapper .main-header, .wrapper .main-sidebar, .card-header form { display: none !important; }
+          .content-wrapper { margin-left: 0 !important; padding: 0 !important; }
+      }
+  </style>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+  <!-- Navbar & Sidebar injected by layout.js -->
+
+  <div class="content-wrapper">
+    <div class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1 class="m-0">Laporan Data Permohonan</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="content">
+      <div class="container-fluid">
+        <div class="card shadow-sm">
+          <div class="card-header bg-white">
+            <div class="row align-items-center">
+              <div class="col-md-3">
+                <h3 class="card-title mt-1 font-weight-bold">Tabel Rekapitulasi</h3>
+              </div>
+              <div class="col-md-9 text-right">
+                <form id="filterForm" class="form-inline justify-content-end">
+                  <div class="input-group input-group-sm mr-2">
+                    <div class="input-group-prepend"><span class="input-group-text">Dari</span></div>
+                    <input type="date" class="form-control" id="tgl_awal">
+                  </div>
+                  <div class="input-group input-group-sm mr-2">
+                    <div class="input-group-prepend"><span class="input-group-text">Sampai</span></div>
+                    <input type="date" class="form-control" id="tgl_akhir">
+                  </div>
+                  <button type="submit" class="btn btn-sm btn-primary mr-2"><i class="fas fa-filter"></i> Filter</button>
+                  <button type="button" class="btn btn-sm btn-secondary mr-2" id="btnReset"><i class="fas fa-sync-alt"></i> Reset</button>
+                  <button type="button" class="btn btn-sm btn-danger" id="btnPdf"><i class="fas fa-print"></i> Cetak / PDF</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="card-body bg-light" id="tableContainer" style="min-height: 400px;">
+             <div class="text-center mt-5"><i class="fas fa-spinner fa-spin fa-2x"></i> Memuat data...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="layout.js"></script>
+
+<script>
+    async function loadData() {
+        $('#tableContainer').html('<div class="text-center mt-5"><i class="fas fa-spinner fa-spin fa-2x"></i> Memuat data...</div>');
+        
+        try {
+            const [permRes, dicetakRes] = await Promise.all([
+                fetch(CONFIG.API_URL + "?table=permohonan").then(r=>r.json()),
+                fetch(CONFIG.API_URL + "?table=dicetak").then(r=>r.json())
+            ]);
+
+            let permohonan = permRes.data || [];
+            let dicetak = dicetakRes.data || [];
+            let dicetakMap = new Set();
+            dicetak.forEach(d => dicetakMap.add(d.no_permohonan + '|' + d.nama));
+
+            let tgl_awal = $('#tgl_awal').val();
+            let tgl_akhir = $('#tgl_akhir').val();
+
+            // Filter
+            permohonan = permohonan.filter(p => {
+                let ket = (p.keterangan || '').toString().toUpperCase().trim();
+                if(ket === 'DUPLIKASI' || ket === 'DITOLAK') return false;
+                if(tgl_awal && p.tgl_permohonan < tgl_awal) return false;
+                if(tgl_akhir && p.tgl_permohonan > tgl_akhir) return false;
+                return true;
+            });
+
+            // Sort by tgl_permohonan ASC, nama ASC
+            permohonan.sort((a, b) => {
+                if(a.tgl_permohonan === b.tgl_permohonan) {
+                    return (a.nama || '').localeCompare(b.nama || '');
+                }
+                return (a.tgl_permohonan > b.tgl_permohonan) ? 1 : -1;
+            });
+
+            if(permohonan.length === 0) {
+                $('#tableContainer').html('<div class="alert alert-info text-center mt-4">Tidak ada data permohonan pada periode ini.</div>');
+                return;
+            }
+
+            let html = '';
+            let current_date = '';
+            let no = 1;
+            
+            let totals = resetTotals();
+            let grandTotals = resetTotals();
+
+            const tableStyle = 'border: 2px solid #000; min-width: 800px; margin-bottom: 30px;';
+            const thStyle = 'background-color: #4db8ff; color: #000; font-weight: bold; text-align: center; border: 1px solid #000; padding: 6px;';
+            const tdStyle = 'border: 1px solid #dee2e6; vertical-align: middle; padding: 6px;';
+            const headerTopStyle = 'background-color: #f8f9fa; font-weight: bold; text-align: center; font-size:16px; border: 1px solid #000; letter-spacing: 2px; padding: 8px;';
+
+            permohonan.forEach(row => {
+                let is_dicetak = dicetakMap.has(row.no_permohonan + '|' + row.nama);
+
+                if (row.tgl_permohonan !== current_date) {
+                    if (current_date !== '') {
+                        html += renderFooter(totals, tdStyle);
+                        html += '</tbody></table></div>';
+                    }
+                    current_date = row.tgl_permohonan;
+                    totals = resetTotals();
+                    no = 1;
+                    
+                    html += '<div class="table-responsive mb-4">';
+                    html += '<table class="table table-sm" style="' + tableStyle + '">';
+                    html += '<thead><tr>';
+                    html += '<th colspan="7" style="' + headerTopStyle + ' color: #007bff;">DATA PERMOHONAN TANGGAL: ' + formatDate(current_date) + '</th>';
+                    html += '</tr><tr>';
+                    html += '<th style="' + thStyle + ' width: 5%;">NO.</th>';
+                    html += '<th style="' + thStyle + '">NO. PERMOHONAN</th>';
+                    html += '<th style="' + thStyle + '">NAMA</th>';
+                    html += '<th style="' + thStyle + '">L/P</th>';
+                    html += '<th style="' + thStyle + '">TP</th>';
+                    html += '<th style="' + thStyle + '">TL</th>';
+                    html += '<th style="' + thStyle + '">KETERANGAN</th>';
+                    html += '</tr></thead><tbody>';
+                }
+
+                totals.jum++;
+                if (row.jenis_kelamin === 'L') totals.l++;
+                if (row.jenis_kelamin === 'P') totals.p++;
+                if (row.tp == 1) totals.tp++;
+                if (row.tl == 1) totals.tl++;
+
+                grandTotals.jum++;
+                if (row.jenis_kelamin === 'L') grandTotals.l++;
+                if (row.jenis_kelamin === 'P') grandTotals.p++;
+                if (row.tp == 1) grandTotals.tp++;
+                if (row.tl == 1) grandTotals.tl++;
+
+                let row_color = is_dicetak ? 'background-color: #d4edda; color: #155724;' : '';
+
+                html += '<tr style="' + row_color + '">';
+                html += '<td style="' + tdStyle + ' text-align:center;">' + (no++) + '</td>';
+                html += '<td style="' + tdStyle + ' text-align:center;">' + (row.no_permohonan || '') + '</td>';
+                html += '<td style="' + tdStyle + '">' + (row.nama || '') + '</td>';
+                html += '<td style="' + tdStyle + ' text-align:center;">' + (row.jenis_kelamin || '') + '</td>';
+                html += '<td style="' + tdStyle + ' text-align:center;">' + (row.tp == 1 ? 'TP' : '') + '</td>';
+                html += '<td style="' + tdStyle + ' text-align:center;">' + (row.tl == 1 ? 'TL' : '') + '</td>';
+                html += '<td style="' + tdStyle + '">' + (row.keterangan || '') + '</td>';
+                html += '</tr>';
+            });
+
+            if (current_date !== '') {
+                html += renderFooter(totals, tdStyle);
+                html += '</tbody></table></div>';
+            }
+
+            html += '<div style="margin-top: 40px;">';
+            html += '<h4 style="text-align: center; margin-bottom: 15px; font-weight: bold; font-family: sans-serif; color: #333;">STATISTIK TOTAL KESELURUHAN PERIODE INI</h4>';
+            html += '<div class="table-responsive">';
+            
+            const grandTotalTableStyle = 'border: 2px solid #000; width: 60%; margin: 0 auto;';
+            const gtHeaderStyle = 'background-color: #28a745; color: #fff; font-weight: bold; text-align: center; border: 1px solid #000; padding: 10px; font-size: 16px;';
+            
+            html += '<table class="table table-bordered table-sm" style="' + grandTotalTableStyle + '">';
+            html += '<thead><tr><th colspan="2" style="' + gtHeaderStyle + '">REKAPITULASI GRAND TOTAL</th></tr></thead><tbody>';
+            
+            const gtRows = [
+                ['LAKI-LAKI', grandTotals.l],
+                ['PEREMPUAN', grandTotals.p],
+                ['JUMLAH PERMOHONAN', grandTotals.jum],
+                ['TOTAL TP', grandTotals.tp],
+                ['TOTAL TL', grandTotals.tl]
+            ];
+            
+            gtRows.forEach(r => {
+                let rowBg = (r[0] === 'JUMLAH PERMOHONAN') ? 'background-color: #fff3cd; font-weight: bold;' : 'background-color: #fff;';
+                html += '<tr style="' + rowBg + '">';
+                html += '<td style="' + tdStyle + ' text-align:left; font-weight:bold; width:60%; font-size: 14px;">' + r[0] + '</td>';
+                html += '<td style="' + tdStyle + ' text-align:center; font-weight:bold; font-size: 16px;">' + r[1] + '</td>';
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div></div>';
+
+            $('#tableContainer').html(html);
+
+        } catch(err) {
+            $('#tableContainer').html('<div class="alert alert-danger text-center">Gagal memuat data.</div>');
+        }
+    }
+
+    function resetTotals() {
+        return { l: 0, p: 0, jum: 0, tp: 0, tl: 0 };
+    }
+
+    function renderFooter(t, tdStyle) {
+        let html = '<tfoot style="background-color: #f1f8ff;">';
+        const rows = [
+            ['LAKI-LAKI', t.l],
+            ['PEREMPUAN', t.p],
+            ['JUMLAH', t.jum],
+            ['TP', t.tp],
+            ['TL', t.tl]
+        ];
+        
+        rows.forEach(r => {
+            html += '<tr>';
+            html += '<td colspan="6" style="' + tdStyle + ' text-align:center; font-weight:bold; color: #333;">' + r[0] + '</td>';
+            html += '<td style="' + tdStyle + ' text-align:center; font-weight:bold; font-size:14px; color: #000;">' + r[1] + '</td>';
+            html += '</tr>';
+        });
+        html += '</tfoot>';
+        return html;
+    }
+
+    function formatDate(dateStr) {
+        if(!dateStr) return '';
+        try {
+            let d = new Date(dateStr);
+            let date = d.getDate().toString().padStart(2, '0');
+            let month = (d.getMonth() + 1).toString().padStart(2, '0');
+            let year = d.getFullYear();
+            return \`\${date}/\${month}/\${year}\`;
+        } catch(e) {
+            return dateStr;
+        }
+    }
+
+    $(document).ready(function() {
+        loadData();
+
+        $('#filterForm').on('submit', function(e) {
+            e.preventDefault();
+            loadData();
+        });
+
+        $('#btnReset').on('click', function() {
+            $('#tgl_awal').val('');
+            $('#tgl_akhir').val('');
+            loadData();
+        });
+
+        $('#btnPdf').on('click', function() {
+            window.print();
+        });
+    });
+</script>
+</body>
+</html>

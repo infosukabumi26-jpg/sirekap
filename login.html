@@ -152,7 +152,7 @@
         btnSubmit.innerHTML = 'Memverifikasi... <i class="fas fa-spinner fa-spin"></i>';
         
         try {
-            const payload = { action: 'login', username: username, password: password };
+            const payload = { action: 'login', table: 'users', username: username, password: password };
             const res = await fetch(CONFIG.API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },

@@ -301,7 +301,7 @@
             .finally(() => $('#btnSave').prop('disabled', false).html('<i class="fas fa-save"></i> Simpan'));
         });
 
-    function showAddModal() {
+    window.showAddModal = function() {
         $('#dataForm')[0].reset();
         $('#action').val('insert');
         $('#modalTitle').text('Tambah Data Permohonan');
@@ -312,7 +312,7 @@
         $('#modal-form').modal('show');
     }
 
-    function showImportModal() {
+    window.showImportModal = function() {
         $('#importForm')[0].reset();
         $('.custom-file-label').html('Pilih file...');
         $('#modalImport').modal('show');
@@ -399,7 +399,7 @@
     // Penutup document ready
     });
 
-    function editData(encodedData) {
+    window.editData = function(encodedData) {
         var data = JSON.parse(decodeURIComponent(encodedData));
         $('#id').val(data.id);
         $('#tgl_permohonan').val(data.tgl_permohonan);
@@ -423,7 +423,7 @@
         $('#modal-form').modal('show');
     }
 
-    function deleteData(id) {
+    window.deleteData = function(id) {
         Swal.fire({
             title: 'Apakah anda yakin?', text: "Data yang dihapus tidak dapat dikembalikan!", icon: 'warning',
             showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Ya, hapus!', cancelButtonText: 'Batal'

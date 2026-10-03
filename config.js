@@ -1,6 +1,6 @@
 const CONFIG = {
     // Ganti URL di bawah ini dengan URL Web App dari Google Apps Script Anda (berakhiran /exec)
-    API_URL: "https://script.google.com/macros/s/AKfycbz4NzJMgQPdsTUrIWKZJW0ha4F3I8dmKl7KkoeSW5_60-5WLA3ekrqQKKcJfjNxbQQ/exec"
+    API_URL: "https://script.google.com/macros/s/AKfycbw7gQrAPs69qTsIr2JJtNOQ8IcX4WAv0Yrepv-FZDYWU_qQjiJM3W55bAfHpzcRZkc/exec"
 };
 
 // Cek autentikasi sebelum merender halaman

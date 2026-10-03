@@ -122,6 +122,7 @@
                     <option value="DUPLIKASI">DUPLIKASI</option>
                     <option value="DITOLAK">DITOLAK</option>
                     <option value="PATAH">PATAH</option>
+                    <option value="LD">LD</option>
                     <option value="ISI MANUAL">Lainnya (Isi Manual)...</option>
                 </select>
                 <input type="text" class="form-control" id="keterangan" name="keterangan" placeholder="Ketik keterangan..." style="display:none;">
@@ -196,6 +197,14 @@
         table = $('#dataTable').DataTable({
             "processing": true,
             "serverSide": false, // Karena pakai GAS, data diambil semua sekaligus
+            "createdRow": function(row, data, dataIndex) {
+                var ket = (data.keterangan || "").toUpperCase();
+                if (ket.includes('DITOLAK') || ket.includes('DUPLIKASI')) {
+                    $(row).addClass('table-danger');
+                } else if (ket.includes('LD')) {
+                    $(row).addClass('table-warning');
+                }
+            },
             "ajax": {
                 "url": CONFIG.API_URL + "?table=permohonan",
                 "type": "GET",
@@ -410,7 +419,7 @@
         $('#tl').prop('checked', data.tl == 1);
         
         var ket = data.keterangan || '';
-        if(ket == 'DUPLIKASI' || ket == 'DITOLAK' || ket == 'PATAH' || ket == '') {
+        if(ket == 'DUPLIKASI' || ket == 'DITOLAK' || ket == 'PATAH' || ket == 'LD' || ket == '') {
             $('#keterangan_pilih').val(ket);
             $('#keterangan').hide().val(ket);
         } else {

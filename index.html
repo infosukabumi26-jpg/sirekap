@@ -334,28 +334,34 @@
         var reader = new FileReader();
         reader.onload = function(e) {
             var text = e.target.result;
-            var lines = text.split('\\n');
+            var lines = text.split(/\r?\n/);
             var rows = [];
             
-            // Asumsi baris 1 bukan header, jika header silakan ubah i=1
+            var separator = ',';
+            if (lines.length > 0 && lines[0].indexOf(';') >= 0) {
+                separator = ';';
+            }
+            
             for(var i=0; i<lines.length; i++) {
                 if(lines[i].trim() === '') continue;
-                var cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-                if(cols.length >= 7) {
+                var cols = lines[i].split(separator).map(c => c.trim().replace(/^"|"$/g, ''));
+                
+                if (i === 0 && cols[0].toUpperCase().includes('TGL')) continue; // Skip header
+                
+                if(cols.length >= 3) {
                     let dateStr = cols[0];
                     let dateParts = dateStr.split(/[-/]/);
-                    // Konversi DD-MM-YYYY atau DD/MM/YYYY menjadi YYYY-MM-DD
                     if (dateParts.length === 3 && dateParts[0].length <= 2) {
                         dateStr = dateParts[2] + '-' + dateParts[1].padStart(2, '0') + '-' + dateParts[0].padStart(2, '0');
                     }
                     rows.push({
                         tgl_permohonan: dateStr,
-                        no_permohonan: cols[1],
-                        nama: cols[2],
-                        jenis_kelamin: cols[3],
-                        tp: cols[4] == '1' || cols[4].toUpperCase() == 'TP' ? 1 : 0,
-                        tl: cols[5] == '1' || cols[5].toUpperCase() == 'TL' ? 1 : 0,
-                        keterangan: cols[6]
+                        no_permohonan: cols[1] || '',
+                        nama: cols[2] || '',
+                        jenis_kelamin: cols[3] || '',
+                        tp: (cols[4] && (cols[4] == '1' || cols[4].toUpperCase() == 'TP')) ? 1 : 0,
+                        tl: (cols[5] && (cols[5] == '1' || cols[5].toUpperCase() == 'TL')) ? 1 : 0,
+                        keterangan: cols[6] || ''
                     });
                 }
             }

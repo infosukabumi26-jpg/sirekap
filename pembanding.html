@@ -268,7 +268,15 @@
             },
             "columnDefs": [{ "defaultContent": "-", "targets": "_all" }], "columns": [
                 { "data": "no", "orderable": false },
-                { "data": "tgl_permohonan" },
+                                { 
+                    "data": "tgl_permohonan",
+                    "render": function(data) {
+                        if (!data) return '';
+                        var parts = data.split('-');
+                        if (parts.length === 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
+                        return data;
+                    }
+                },
                 { "data": "no_permohonan" },
                 { "data": "nama" },
                 { "data": "jenis_kelamin" },
@@ -500,4 +508,5 @@
 </script>
 </body>
 </html>
+
 

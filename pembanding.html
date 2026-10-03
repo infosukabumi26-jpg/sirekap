@@ -192,7 +192,7 @@
                     <input type="file" class="custom-file-input" id="csvFile" accept=".csv" required>
                     <label class="custom-file-label" for="csvFile">Pilih file...</label>
                 </div>
-                <small class="text-muted mt-2 d-block">Format kolom (tanpa header): Tgl(YYYY-MM-DD), No Permohonan, Nama, L/P, TP(1/0), TL(1/0), Keterangan</small>
+                <small class="text-muted mt-2 d-block">Format kolom (tanpa header): Tgl(DD-MM-YYYY), No Permohonan, Nama, L/P, TP(1/0), TL(1/0), Keterangan</small>
             </div>
         </div>
         <div class="modal-footer justify-content-between bg-light">
@@ -374,8 +374,14 @@
                 if(lines[i].trim() === '') continue;
                 var cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
                 if(cols.length >= 7) {
+                    let dateStr = cols[0];
+                    let dateParts = dateStr.split(/[-/]/);
+                    // Konversi DD-MM-YYYY atau DD/MM/YYYY menjadi YYYY-MM-DD
+                    if (dateParts.length === 3 && dateParts[0].length <= 2) {
+                        dateStr = dateParts[2] + '-' + dateParts[1].padStart(2, '0') + '-' + dateParts[0].padStart(2, '0');
+                    }
                     rows.push({
-                        tgl_permohonan: cols[0],
+                        tgl_permohonan: dateStr,
                         no_permohonan: cols[1],
                         nama: cols[2],
                         jenis_kelamin: cols[3],

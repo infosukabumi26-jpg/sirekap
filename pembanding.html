@@ -333,7 +333,6 @@
             .catch(err => Swal.fire('Error', err.toString(), 'error'))
             .finally(() => $('#btnSave').prop('disabled', false).html('<i class="fas fa-save"></i> Simpan Data'));
         });
-    });
 
     function showAddModal() {
         $('#dataForm')[0].reset();
@@ -353,7 +352,7 @@
     }
 
     $('#csvFile').on('change', function() {
-        let fileName = $(this).val().split('\\').pop();
+        let fileName = $(this).val().split('\\\\').pop();
         $(this).next('.custom-file-label').addClass("selected").html(fileName);
     });
 
@@ -428,6 +427,9 @@
             .finally(() => $('#btnImport').prop('disabled', false).html('<i class="fas fa-upload"></i> Upload & Import'));
         };
         reader.readAsText(file);
+    });
+    
+    // Penutup document ready
     });
 
     function editData(encodedData) {

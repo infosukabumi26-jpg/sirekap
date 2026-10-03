@@ -52,6 +52,9 @@
               <button type="button" class="btn btn-info btn-sm" onclick="showAddModal()">
                 <i class="fas fa-plus"></i> Tambah Data
               </button>
+              <button class="btn btn-sm btn-success" onclick="showImportModal()">
+                <i class="fas fa-file-import"></i> Import CSV
+              </button>
             </div>
           </div>
           <div class="card-body">
@@ -165,6 +168,36 @@
         <div class="modal-footer bg-light">
           <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Batal</button>
           <button type="submit" class="btn btn-info" id="btnSave"><i class="fas fa-save"></i> Simpan Data</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Import CSV -->
+<div class="modal fade" id="modalImport">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-success">
+        <h4 class="modal-title">Import Data CSV</h4>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="importForm">
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Pilih File CSV</label>
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="csvFile" accept=".csv" required>
+                    <label class="custom-file-label" for="csvFile">Pilih file...</label>
+                </div>
+                <small class="text-muted mt-2 d-block">Format kolom (tanpa header): Tgl(YYYY-MM-DD), No Permohonan, Nama, L/P, TP(1/0), TL(1/0), Keterangan</small>
+            </div>
+        </div>
+        <div class="modal-footer justify-content-between bg-light">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-success" id="btnImport"><i class="fas fa-upload"></i> Upload & Import</button>
         </div>
       </form>
     </div>
@@ -312,6 +345,77 @@
         $('#keterangan').hide().val('');
         $('#modal-form').modal('show');
     }
+
+    function showImportModal() {
+        $('#importForm')[0].reset();
+        $('.custom-file-label').html('Pilih file...');
+        $('#modalImport').modal('show');
+    }
+
+    $('#csvFile').on('change', function() {
+        let fileName = $(this).val().split('\\').pop();
+        $(this).next('.custom-file-label').addClass("selected").html(fileName);
+    });
+
+    $('#importForm').on('submit', function(e) {
+        e.preventDefault();
+        var file = document.getElementById('csvFile').files[0];
+        if(!file) return;
+
+        $('#btnImport').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
+        
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var text = e.target.result;
+            var lines = text.split('\\n');
+            var rows = [];
+            
+            for(var i=0; i<lines.length; i++) {
+                if(lines[i].trim() === '') continue;
+                var cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+                if(cols.length >= 7) {
+                    rows.push({
+                        tgl_permohonan: cols[0],
+                        no_permohonan: cols[1],
+                        nama: cols[2],
+                        jenis_kelamin: cols[3],
+                        tp: cols[4] == '1' || cols[4].toUpperCase() == 'TP' ? 1 : 0,
+                        tl: cols[5] == '1' || cols[5].toUpperCase() == 'TL' ? 1 : 0,
+                        keterangan: cols[6]
+                    });
+                }
+            }
+            
+            if(rows.length === 0) {
+                Swal.fire('Gagal!', 'Tidak ada data valid di file CSV', 'error');
+                $('#btnImport').prop('disabled', false).html('<i class="fas fa-upload"></i> Upload & Import');
+                return;
+            }
+            
+            fetch(CONFIG.API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    action: 'import',
+                    table: 'pembanding',
+                    rows: rows
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if(res.status === 'success') {
+                    $('#modalImport').modal('hide');
+                    table.ajax.reload(null, false);
+                    Swal.fire('Sukses!', res.count + ' data berhasil diimport!', 'success');
+                } else {
+                    Swal.fire('Gagal!', res.message, 'error');
+                }
+            })
+            .catch(err => Swal.fire('Error', err.toString(), 'error'))
+            .finally(() => $('#btnImport').prop('disabled', false).html('<i class="fas fa-upload"></i> Upload & Import'));
+        };
+        reader.readAsText(file);
+    });
 
     function editData(encodedData) {
         var data = JSON.parse(decodeURIComponent(encodedData));

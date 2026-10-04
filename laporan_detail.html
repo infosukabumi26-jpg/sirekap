@@ -183,12 +183,14 @@
                 if (row.jenis_kelamin === 'P') totals.p++;
                 if (row.tp == 1) totals.tp++;
                 if (row.tl == 1) totals.tl++;
+                if (row.is_dicetak) totals.sudah_dicetak++; else totals.belum_dicetak++;
 
                 grandTotals.jum++;
                 if (row.jenis_kelamin === 'L') grandTotals.l++;
                 if (row.jenis_kelamin === 'P') grandTotals.p++;
                 if (row.tp == 1) grandTotals.tp++;
                 if (row.tl == 1) grandTotals.tl++;
+                if (row.is_dicetak) grandTotals.sudah_dicetak++; else grandTotals.belum_dicetak++;
 
                 let status_cetak = row.is_dicetak ? 'SUDAH DICETAK' : 'BELUM DICETAK';
                 let row_color = row.is_dicetak ? 'background-color: #d4edda; color: #155724;' : '';
@@ -225,7 +227,9 @@
                 ['PEREMPUAN', grandTotals.p],
                 ['JUMLAH PERMOHONAN', grandTotals.jum],
                 ['TOTAL TP', grandTotals.tp],
-                ['TOTAL TL', grandTotals.tl]
+                ['TOTAL TL', grandTotals.tl],
+                ['TOTAL SUDAH DICETAK', grandTotals.sudah_dicetak],
+                ['TOTAL BELUM DICETAK', grandTotals.belum_dicetak]
             ];
             
             gtRows.forEach(r => {
@@ -246,7 +250,7 @@
     }
 
     function resetTotals() {
-        return { l: 0, p: 0, jum: 0, tp: 0, tl: 0 };
+        return { l: 0, p: 0, jum: 0, tp: 0, tl: 0, sudah_dicetak: 0, belum_dicetak: 0 };
     }
 
     function renderFooter(t, tdStyle) {
@@ -256,7 +260,9 @@
             ['PEREMPUAN', t.p],
             ['JUMLAH', t.jum],
             ['TP', t.tp],
-            ['TL', t.tl]
+            ['TL', t.tl],
+            ['SUDAH DICETAK', t.sudah_dicetak],
+            ['BELUM DICETAK', t.belum_dicetak]
         ];
         
         rows.forEach(r => {

@@ -276,7 +276,7 @@ function resetTotals() {
 }
 
 function renderFooter(t, tdStyle, sepStyle) {
-    let html = '<tfoot style="background-color: #fff;">';
+    let html = '';
     const rows = [
         ['LAKI-LAKI', t.p_l, t.pb_l],
         ['PEREMPUAN', t.p_p, t.pb_p],
@@ -286,7 +286,7 @@ function renderFooter(t, tdStyle, sepStyle) {
     ];
     
     rows.forEach(r => {
-        html += '<tr>';
+        html += '<tr style="background-color: #fff;">';
         html += '<td colspan="6" style="' + tdStyle + ' text-align:center; font-weight:bold; color: #555;">' + r[0] + '</td>';
         html += '<td style="' + tdStyle + ' text-align:center; font-weight:bold; font-size:14px;">' + r[1] + '</td>';
         html += '<td style="' + sepStyle + '"></td>';
@@ -294,7 +294,6 @@ function renderFooter(t, tdStyle, sepStyle) {
         html += '<td style="' + tdStyle + ' text-align:center; font-weight:bold; font-size:14px;">' + r[2] + '</td>';
         html += '</tr>';
     });
-    html += '</tfoot>';
     return html;
 }
 
@@ -332,3 +331,4 @@ $(document).ready(function() {
 </script>
 </body>
 </html>
+

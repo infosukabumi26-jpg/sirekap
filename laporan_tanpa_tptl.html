@@ -236,7 +236,7 @@
     }
 
     function renderFooter(t, tdStyle) {
-        let html = '<tfoot style="background-color: #f1f8ff;">';
+        let html = '';
         const rows = [
             ['LAKI-LAKI', t.l],
             ['PEREMPUAN', t.p],
@@ -244,12 +244,11 @@
         ];
         
         rows.forEach(r => {
-            html += '<tr>';
+            html += '<tr style="background-color: #f1f8ff;">';
             html += '<td colspan="4" style="' + tdStyle + ' text-align:center; font-weight:bold; color: #333;">' + r[0] + '</td>';
             html += '<td style="' + tdStyle + ' text-align:center; font-weight:bold; font-size:14px; color: #000;">' + r[1] + '</td>';
             html += '</tr>';
         });
-        html += '</tfoot>';
         return html;
     }
 

@@ -90,6 +90,27 @@
             let dicetakMap = new Set();
             dicetak.forEach(d => dicetakMap.add(d.no_permohonan + '|' + d.nama));
 
+            function parseTglToYMD(tgl) {
+                if (!tgl) return '';
+                if (tgl.indexOf('T') !== -1) {
+                    let d = new Date(tgl);
+                    if (!isNaN(d.getTime())) {
+                        return d.getFullYear() + '-' + ("0" + (d.getMonth() + 1)).slice(-2) + '-' + ("0" + d.getDate()).slice(-2);
+                    }
+                }
+                var parts = tgl.split(/[-/]/);
+                if (parts.length === 3) {
+                    if (parts[0].length === 4) return parts[0] + '-' + parts[1] + '-' + parts[2].substring(0,2);
+                    return parts[2].substring(0,4) + '-' + parts[1] + '-' + parts[0];
+                }
+                return tgl.substring(0, 10);
+            }
+
+            permohonan = permohonan.map(p => {
+                p.tgl_permohonan = parseTglToYMD(p.tgl_permohonan);
+                return p;
+            });
+
             let tgl_awal = $('#tgl_awal').val();
             let tgl_akhir = $('#tgl_akhir').val();
 
@@ -234,15 +255,11 @@
 
     function formatDate(dateStr) {
         if(!dateStr) return '';
-        try {
-            let d = new Date(dateStr);
-            let date = d.getDate().toString().padStart(2, '0');
-            let month = (d.getMonth() + 1).toString().padStart(2, '0');
-            let year = d.getFullYear();
-            return `${date}/${month}/${year}`;
-        } catch(e) {
-            return dateStr;
+        var parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return parts[2] + '/' + parts[1] + '/' + parts[0];
         }
+        return dateStr;
     }
 
     $(document).ready(function() {
@@ -266,3 +283,4 @@
 </script>
 </body>
 </html>
+

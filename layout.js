@@ -87,6 +87,12 @@ document.addEventListener('DOMContentLoaded', () => {
                   <p>Laporan Detail</p>
                 </a>
               </li>
+              <li class="nav-item">
+                <a href="laporan_belum_dicetak.html" class="nav-link ${currentPath === 'laporan_belum_dicetak.html' ? 'active' : ''}">
+                  <i class="nav-icon fas fa-file-invoice"></i>
+                  <p>Laporan Belum Dicetak</p>
+                </a>
+              </li>
               ${adminMenuHtml}
             </ul>
           </nav>

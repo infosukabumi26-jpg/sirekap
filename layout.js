@@ -81,6 +81,12 @@ document.addEventListener('DOMContentLoaded', () => {
                   <p>Laporan Tanpa TP/TL</p>
                 </a>
               </li>
+              <li class="nav-item">
+                <a href="laporan_detail.html" class="nav-link ${currentPath === 'laporan_detail.html' ? 'active' : ''}">
+                  <i class="nav-icon fas fa-list-alt"></i>
+                  <p>Laporan Detail</p>
+                </a>
+              </li>
               ${adminMenuHtml}
             </ul>
           </nav>

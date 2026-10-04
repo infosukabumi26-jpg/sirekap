@@ -40,10 +40,26 @@
       <div class="container-fluid">
         <div class="card card-primary card-outline shadow-sm">
           <div class="card-header">
-            <h3 class="card-title mt-1"><i class="fas fa-list"></i> Daftar Data</h3>
-            <div class="card-tools">
-              <button class="btn btn-sm btn-primary" onclick="showAddModal()"><i class="fas fa-plus"></i> Tambah Data</button>
-              <button class="btn btn-sm btn-success" onclick="showImportModal()"><i class="fas fa-file-import"></i> Import CSV</button>
+            <div class="row w-100 align-items-center">
+              <div class="col-md-3">
+                <h3 class="card-title mt-1"><i class="fas fa-list"></i> Daftar Data</h3>
+              </div>
+              <div class="col-md-9 text-right pr-0">
+                <form id="filterForm" class="form-inline justify-content-end">
+                  <div class="input-group input-group-sm mr-2">
+                    <div class="input-group-prepend"><span class="input-group-text">Dari</span></div>
+                    <input type="date" class="form-control" id="tgl_awal">
+                  </div>
+                  <div class="input-group input-group-sm mr-2">
+                    <div class="input-group-prepend"><span class="input-group-text">Sampai</span></div>
+                    <input type="date" class="form-control" id="tgl_akhir">
+                  </div>
+                  <button type="submit" class="btn btn-sm btn-primary mr-2"><i class="fas fa-filter"></i> Filter</button>
+                  <button type="button" class="btn btn-sm btn-secondary mr-2" id="btnReset"><i class="fas fa-sync-alt"></i> Reset</button>
+                  <button type="button" class="btn btn-sm btn-primary" onclick="showAddModal()"><i class="fas fa-plus"></i> Tambah Data</button>
+                  <button type="button" class="btn btn-sm btn-success ml-2" onclick="showImportModal()"><i class="fas fa-file-import"></i> Import CSV</button>
+                </form>
+              </div>
             </div>
           </div>
           <div class="card-body">
@@ -192,6 +208,31 @@
         }
     }
 
+    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex, originalData) {
+        let min = $('#tgl_awal').val();
+        let max = $('#tgl_akhir').val();
+        
+        let tgl = originalData.tgl_permohonan || '';
+        if (tgl.indexOf('T') !== -1) {
+            let d = new Date(tgl);
+            if (!isNaN(d.getTime())) {
+                tgl = d.getFullYear() + '-' + ("0" + (d.getMonth() + 1)).slice(-2) + '-' + ("0" + d.getDate()).slice(-2);
+            }
+        } else {
+            tgl = tgl.substring(0, 10); 
+        }
+
+        if (
+            (!min && !max) ||
+            (!min && tgl <= max) ||
+            (min <= tgl && !max) ||
+            (min <= tgl && tgl <= max)
+        ) {
+            return true;
+        }
+        return false;
+    });
+
     var table;
     $(document).ready(function() {
         table = $('#dataTable').DataTable({
@@ -280,6 +321,17 @@
                     }
                 }
             ]
+        });
+
+        $('#filterForm').on('submit', function(e) {
+            e.preventDefault();
+            table.draw();
+        });
+
+        $('#btnReset').on('click', function() {
+            $('#tgl_awal').val('');
+            $('#tgl_akhir').val('');
+            table.draw();
         });
 
         $('#dataForm').on('submit', function(e) {
